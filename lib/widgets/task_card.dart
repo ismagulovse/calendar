@@ -19,6 +19,7 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheduledDate = task.scheduledDate;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(18),
@@ -79,6 +80,15 @@ class TaskCard extends StatelessWidget {
                   task.done ? 'Выполнена' : 'В работе',
                   style: const TextStyle(fontSize: 13, color: Colors.black54),
                 ),
+                if (scheduledDate != null)
+                  Text(
+                    'Запланировано: ${scheduledDate.day}.${scheduledDate.month}.${scheduledDate.year} '
+                    '${TimeOfDay.fromDateTime(scheduledDate).format(context)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF163F73),
+                    ),
+                  ),
               ],
             ),
           ),

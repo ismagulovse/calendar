@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'calendar_screen.dart';
 import 'todoscreen.dart';
+import 'state/todo_state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,13 +13,28 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int tab = 0;
+  final TodoState taskState = TodoState();
+
+  @override
+  void dispose() {
+    taskState.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: tab,
-        children: const [TodoScreen(), CalendarScreen()],
+      body: ListenableBuilder(
+        listenable: taskState,
+        builder: (context, child) {
+          return IndexedStack(
+            index: tab,
+            children: [
+              TodoScreen(state: taskState),
+              CalendarScreen(taskState: taskState),
+            ],
+          );
+        },
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,

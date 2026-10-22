@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import 'state/todo_state.dart';
 import 'models/task.dart';
 import 'models/task_options.dart';
@@ -8,16 +7,19 @@ import 'task_form.dart';
 import 'widgets/task_card.dart';
 import 'widgets/task_filter.dart';
 import 'widgets/category_filter.dart';
+import 'widgets/add_task_button.dart';
 
 class TodoScreen extends StatefulWidget {
-  const TodoScreen({super.key});
+  final TodoState state;
+
+  const TodoScreen({super.key, required this.state});
 
   @override
   State<TodoScreen> createState() => _TodoScreenState();
 }
 
 class _TodoScreenState extends State<TodoScreen> {
-  final TodoState state = TodoState();
+  TodoState get state => widget.state;
 
   Future<void> editTask(Task task) async {
     final Task? data = await Navigator.push<Task>(
@@ -30,7 +32,13 @@ class _TodoScreenState extends State<TodoScreen> {
     }
 
     setState(() {
-      state.edit(task, data.title, category: data.category, rank: data.rank);
+      state.edit(
+        task,
+        data.title,
+        category: data.category,
+        rank: data.rank,
+        scheduledDate: data.scheduledDate,
+      );
     });
   }
 
@@ -57,7 +65,12 @@ class _TodoScreenState extends State<TodoScreen> {
     }
 
     setState(() {
-      state.add(data.title, category: data.category, rank: data.rank);
+      state.add(
+        data.title,
+        category: data.category,
+        rank: data.rank,
+        scheduledDate: data.scheduledDate,
+      );
     });
   }
 
@@ -65,13 +78,7 @@ class _TodoScreenState extends State<TodoScreen> {
   Widget build(BuildContext context) {
     final list = state.visible;
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: addTask,
-        tooltip: 'Добавить задачу',
-        backgroundColor: const Color(0xFF163F73),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: AddTaskButton(onPressed: addTask),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -137,7 +144,14 @@ class _TodoScreenState extends State<TodoScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              const Text('Категория', style: TextStyle(color: Color(0xFF163F73), fontSize:16, fontWeight: FontWeight.bold ),),
+              const Text(
+                'Категория',
+                style: TextStyle(
+                  color: Color(0xFF163F73),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               CategoryFilter(
                 category: state.category,

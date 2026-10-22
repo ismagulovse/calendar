@@ -7,8 +7,15 @@ class TaskRepo {
     tasks.add(task);
   }
 
-  void edit(Task task, String title, {String? category, int? rank}) {
+  void edit(
+    Task task,
+    String title, {
+    String? category,
+    int? rank,
+    DateTime? scheduledDate,
+  }) {
     task.title = title;
+    task.scheduledDate = scheduledDate;
     if (category != null) {
       task.category = category;
     }

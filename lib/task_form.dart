@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'models/task.dart';
 import 'models/task_options.dart';
+import 'state/calendar_state.dart';
+import 'widgets/calendar_month.dart';
 
 class TaskForm extends StatefulWidget {
   final Task? task;
+  final DateTime? initialDate;
 
-  const TaskForm({super.key, this.task});
+  const TaskForm({super.key, this.task, this.initialDate});
 
   @override
   State<TaskForm> createState() => _TaskFormState();
@@ -17,6 +20,9 @@ class _TaskFormState extends State<TaskForm> {
   final title = TextEditingController();
   String category = 'Учеба';
   int rank = 1;
+  bool hasDate = false;
+  DateTime scheduledDate = DateTime.now();
+  final CalendarState datePickerState = CalendarState();
 
   @override
   void initState() {
@@ -24,6 +30,66 @@ class _TaskFormState extends State<TaskForm> {
     title.text = widget.task?.title ?? '';
     category = widget.task?.category ?? 'Учеба';
     rank = widget.task?.rank ?? 1;
+    final date = widget.task?.scheduledDate ?? widget.initialDate;
+    hasDate = date != null;
+    scheduledDate = date ?? DateTime.now();
+  }
+
+  Future<void> chooseDate() async {
+    datePickerState.currentMonth = scheduledDate;
+    datePickerState.selectedDate = scheduledDate;
+
+    final date = await showDialog<DateTime>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Выберите дату'),
+        contentPadding: const EdgeInsets.all(8),
+        content: SizedBox(
+          width: 350,
+          child: SingleChildScrollView(
+            child: CalendarMonth(state: datePickerState),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(context, datePickerState.selectedDate),
+            child: const Text('Выбрать'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || date == null) return;
+    setState(() {
+      scheduledDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        scheduledDate.hour,
+        scheduledDate.minute,
+      );
+    });
+  }
+
+  Future<void> chooseTime() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(scheduledDate),
+    );
+    if (!mounted || time == null) return;
+    setState(() {
+      scheduledDate = DateTime(
+        scheduledDate.year,
+        scheduledDate.month,
+        scheduledDate.day,
+        time.hour,
+        time.minute,
+      );
+    });
   }
 
   void save() {
@@ -34,6 +100,7 @@ class _TaskFormState extends State<TaskForm> {
         done: widget.task?.done ?? false,
         category: category,
         rank: rank,
+        scheduledDate: hasDate ? scheduledDate : null,
       );
       Navigator.pop(context, task);
     }
@@ -41,6 +108,7 @@ class _TaskFormState extends State<TaskForm> {
 
   @override
   void dispose() {
+    datePickerState.dispose();
     title.dispose();
     super.dispose();
   }
@@ -126,6 +194,33 @@ class _TaskFormState extends State<TaskForm> {
                   },
                 ),
                 const SizedBox(height: 20),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Поставить дату'),
+                  value: hasDate,
+                  onChanged: (value) {
+                    setState(() {
+                      hasDate = value ?? false;
+                    });
+                  },
+                ),
+                if (hasDate) ...[
+                  OutlinedButton.icon(
+                    onPressed: chooseDate,
+                  
+                    label: Text(
+                      'Дата: ${scheduledDate.day}.${scheduledDate.month}.${scheduledDate.year}',
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: chooseTime,
+                  
+                    label: Text(
+                      'Время начала: ${TimeOfDay.fromDateTime(scheduledDate).format(context)}',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 const Text(
                   'Категория',
                   style: TextStyle(

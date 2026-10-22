@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
+
 import '../data/task_repo.dart';
 import '../models/task.dart';
 import '../models/task_options.dart';
 
-class TodoState {
+class TodoState extends ChangeNotifier {
   final TaskRepo repo = TaskRepo();
   String search = '';
   String filter = 'Все';
@@ -53,21 +55,64 @@ class TodoState {
     }
     return result;
   }
-  void add(String title, {String category = 'Учеба', int rank = 1}) {
-    repo.add(
-      Task(title: title, date: DateTime.now(), category: category, rank: rank),
-    );
+
+  List<Task> tasksForDay(DateTime day) {
+    final List<Task> result = [];
+    for (final task in tasks) {
+      final date = task.scheduledDate;
+      if (date != null &&
+          date.year == day.year &&
+          date.month == day.month &&
+          date.day == day.day) {
+        result.add(task);
+      }
+    }
+    result.sort((a, b) => a.scheduledDate!.compareTo(b.scheduledDate!));
+    return result;
   }
 
-  void edit(Task task, String title, {String? category, int? rank}) {
-    repo.edit(task, title, category: category, rank: rank);
+  void add(
+    String title, {
+    String category = 'Учеба',
+    int rank = 1,
+    DateTime? scheduledDate,
+  }) {
+    repo.add(
+      Task(
+        title: title,
+        date: DateTime.now(),
+        category: category,
+        rank: rank,
+        scheduledDate: scheduledDate,
+      ),
+    );
+    notifyListeners();
+  }
+
+  void edit(
+    Task task,
+    String title, {
+    String? category,
+    int? rank,
+    DateTime? scheduledDate,
+  }) {
+    repo.edit(
+      task,
+      title,
+      category: category,
+      rank: rank,
+      scheduledDate: scheduledDate,
+    );
+    notifyListeners();
   }
 
   void toggle(Task task) {
     repo.toggle(task);
+    notifyListeners();
   }
 
   void remove(Task task) {
     repo.remove(task);
+    notifyListeners();
   }
 }
